@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.notice.NoticeContentMapper">
+    <insert id="upsertContentBatch">
+        INSERT INTO notice_content
+        (user_id, operate_user_id, type, target_type, target_id, related_info, read_flag, truncated, status, deleted, create_time, update_time)
+        VALUES
+        <foreach collection="noticeContentUpdEventList" item="item" separator=",">
+            (#{item.userId},
+            #{item.operateUserId},
+            #{item.type},
+            #{item.targetType},
+            #{item.targetId},
+            #{item.relatedInfo},
+            <if test="item.readFlag">1</if><if test="!item.readFlag">0</if>,
+            <!--            如果截断那么置为1 否则里面的信息relatedInfo就是全部信息-->
+            <if test="item.truncated">1</if><if test="!item.truncated">0</if>,
+            <if test="item.status">1</if><if test="!item.status">0</if>,
+            0,
+            #{item.createTime},
+            NOW())
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+<!--一般不会重复,除非是重复点赞、收藏信息 但是目前没有添加唯一主键,这里加更新是为了后续扩展方便(加唯一键)-->
+        related_info = VALUES(related_info),
+        truncated    = VALUES(truncated),
+        status       = VALUES(status),
+        update_time  = NOW()
+    </insert>
+
+    <select id="getNoticePageByType">
+        SELECT
+        id    AS msgId,
+        target_id     AS relatedId,
+        target_type   AS relatedType,
+        related_info  AS relatedInfo,
+        operate_user_id AS operateUserId,
+        type,
+        read_flag     AS state,
+        create_time
+        FROM  notice_content
+        WHERE user_id  = #{userId}          -- 接收者
+        AND type     = #{type}          -- 类型
+        AND `status`   = 1          -- 有效
+        AND deleted  = 0          -- 未删除
+        ORDER BY create_time DESC   -- 最终再按时间整体排序
+<!--        注意不要写分号 ;-->
+    </select>
+
+    <update id="clearReadStat">
+        UPDATE notice_content
+        <set>
+            read_flag=1
+        </set>
+        <where>
+            user_id=#{userId} AND read_flag=0
+            <if test="type!=null"> AND type=#{type}</if>
+        </where>
+    </update>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.user.UserMapper">
+    <update id="updateUserInfoById">
+        update user_info
+        <set>
+            <if test="userName!=null">user_name=#{userName},</if>
+            <if test="photo!=null">photo=#{photo},</if>
+            <if test="position!=null">position=#{position},</if>
+            <if test="userName!=null">user_name=#{userName},</if>
+            <if test="company!=null">company=#{company},</if>
+            <if test="profile!=null">profile=#{profile},</if>
+            <if test="extend!=null">extend=#{extend},</if>
+            <if test="deleted!=null">deleted=#{deleted},</if>
+            <if test="userRole!=null">user_role=#{userRole},</if>
+            <if test="ip != null">
+<!--                把ip序列化再更新-->
+                ip = #{ip, typeHandler=com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler},
+            </if>
+            <if test="updateTime!=null">update_time=#{updateTime}</if>
+        </set>
+        <where>
+            user_id=#{userId}
+        </where>
+    </update>
+
+    <select id="getQueryInfo">
+        SELECT u.articleCount,
+        ui.*
+        FROM (
+            SELECT COUNT(*) AS articleCount
+            FROM article
+            WHERE user_id = #{userId} AND deleted=0
+        ) u
+        JOIN user_info ui ON ui.user_id = #{userId};
+    </select>
+
+    <update id="updateUserById">
+        UPDATE user
+        <set>
+            <if test="userName!=null">user_name=#{userName},</if>
+            <if test="password!=null">password=#{password},</if>
+            <if test="thirdAccountId!=null">third_account_id=#{thirdAccountId},</if>
+            <if test="password!=null">password=#{password},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </set>
+        <where>
+            id=#{id}
+        </where>
+    </update>
+
+    <select id="getCommInfoByUserIds">
+        SELECT user_id AS userId, user_name AS userName, photo
+        FROM user_info
+        <where>
+            user_id in
+            <foreach collection="userIds" item="userId" open="(" close=")" separator=",">
+                #{userId}
+            </foreach>
+        </where>
+    </select>
+</mapper>

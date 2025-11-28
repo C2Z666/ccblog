@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.chat.ChatUserMapper">
+    <select id="listCursorChatHistory">
+        SELECT
+        id                 AS messageId,
+        seq,
+        receiver_id        AS recvUserId,   -- 接收者
+        sender_id          AS sendUserId,   -- 发送者
+        msg_type           AS type,
+        content,
+        read_flag = 1      AS readFlag,     -- 转布尔
+        status,
+        create_time
+        FROM chat_user_history
+        <where>
+            ((sender_id, receiver_id) IN ((#{userId},#{peerId}),(#{peerId},#{userId})))   -- 两人对话
+            AND (sender_id=#{userId} AND deleted_by_s = 0 OR sender_id=#{peerId} AND deleted_by_r = 0)
+            <![CDATA[
+            AND (create_time < #{cursor} OR (create_time = #{cursor} AND seq < #{cursorSeq}))
+            ]]>
+        </where>
+<!--        只能这样才能从上往下取limit-->
+        ORDER BY create_time DESC,seq DESC
+        LIMIT #{limit};
+    </select>
+
+    <insert id="upsertContentBatch">
+        INSERT INTO chat_user_history
+        (seq, sender_id, receiver_id, content, msg_type, status, read_flag, deleted_by_s, deleted_by_r, create_time, update_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.seq},
+            #{item.sendUserId},
+            #{item.recvUserId},
+            #{item.content},
+            #{item.type},
+            #{item.status},
+            <if test="item.readFlag">1</if><if test="!item.readFlag">0</if>,
+            0, 0,                          -- 初始未删除
+            #{item.createTime},
+            NOW())
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            content      = VALUES(content),
+            status       = VALUES(status),
+            read_flag    = VALUES(read_flag),
+            update_time  = NOW()
+    </insert>
+
+    <update id="deleteMsg">
+        UPDATE chat_user_history
+        <set>
+            <if test="isSender">deleted_by_s=1</if>
+            <if test="!isSender">deleted_by_r=1</if>
+        </set>
+        <where>
+            (sender_id,receiver_id) in ((#{userId},#{peerId}),(#{peerId},#{userId}))
+            AND seq=#{seq}
+        </where>
+    </update>
+
+    <select id="getNewSessionByUserId">
+        SELECT
+        sender_id AS userId,
+        receiver_id AS peerId,
+        LEFT(content,50) AS `snapshot`,
+        create_time AS lastMsgTime,
+        seq AS displaySeq,
+        status
+        FROM chat_user_history
+        WHERE
+        ((sender_id,receiver_id) in ((#{userId},#{peerId}),(#{peerId},#{userId})))
+        AND (sender_id=#{userId} AND deleted_by_s=0 OR sender_id=#{peerId} AND deleted_by_r=0)
+        ORDER BY seq DESC
+        LIMIT 1
+    </select>
+</mapper>

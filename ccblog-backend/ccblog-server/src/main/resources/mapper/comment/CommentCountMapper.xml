@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.comment.CommentCountMapper">
+    <insert id="upsertDeltaCountBatch">
+        INSERT INTO comment_count
+        (comment_id, like_cnt, dislike_cnt, reply_cnt, report_cnt, update_time)
+        VALUES
+        <foreach collection="commentCountList" item="item" separator=",">
+            (#{item.commentId},
+            <if test="item.likeCnt != null">#{item.likeCnt}</if>
+            <if test="item.likeCnt == null">0</if>,
+            <if test="item.dislikeCnt != null">#{item.dislikeCnt}</if>
+            <if test="item.dislikeCnt == null">0</if>,
+            <if test="item.replyCnt != null">#{item.replyCnt}</if>
+            <if test="item.replyCnt == null">0</if>,
+            <if test="item.reportCnt != null">#{item.reportCnt}</if>
+            <if test="item.reportCnt == null">0</if>,
+            NOW())
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        like_cnt    = GREATEST(IFNULL(like_cnt,0)    + VALUES(like_cnt),    0),
+        dislike_cnt = GREATEST(IFNULL(dislike_cnt,0) + VALUES(dislike_cnt), 0),
+        reply_cnt   = GREATEST(IFNULL(reply_cnt,0)   + VALUES(reply_cnt),   0),
+        report_cnt  = GREATEST(IFNULL(report_cnt,0)  + VALUES(report_cnt),  0),
+        update_time = NOW()
+    </insert>
+
+    <select id="getCommentCountBatch">
+        SELECT comment_id AS commentId, reply_cnt AS replyCnt,like_cnt AS likeCnt,dislike_cnt AS dislikeCnt
+        FROM comment_count
+        <where>
+            comment_id IN
+            <foreach collection="commentIds" separator="," open="(" close=")" item="commentId">
+                #{commentId}
+            </foreach>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.article.ArticleMapper">
+<!--    定义articleDTO 这个后续已经被优化到基本没什么用了,只有article部分是在数据库查-->
+    <resultMap id="ArticleDTO" type="com.ccblog.dto.article.ArticleDTO" autoMapping="true">
+        <id column="articleId" property="articleId"/>
+        <result column="update_time" property="lastUpdateTime"/>
+        <result column="picture" property="cover"/>
+        <result column="source" property="sourceType"/>
+        <result column="a_id" property="articleId"/>
+<!--        &lt;!&ndash; 嵌套 CategoryDTO,注意自动转换才支持驼峰转换 &ndash;&gt;-->
+<!--        <association property="category" javaType="com.ccblog.dto.article.CategoryDTO">-->
+<!--            <id column="categoryId" property="categoryId"/>-->
+<!--            <result column="category_name" property="category"/>-->
+<!--            <result column="categoryStatus" property="status"/>-->
+<!--            <result column="rank" property="rank"/>-->
+<!--        </association>-->
+<!--        <collection property="tags" ofType="com.ccblog.dto.article.TagDTO">-->
+<!--            <id column="tagId" property="tagId"/>-->
+<!--            <result column="tag_name" property="tag"/>-->
+<!--            <result column="tagStatus" property="status"/>-->
+<!--&lt;!&ndash;            <result column="selected" property="selected"/>&ndash;&gt;-->
+<!--        </collection>-->
+    </resultMap>
+
+<!--    定义ArticleEditDTO 看着跟上面差不多,因为ArticleDTO还有一些要加的一些还没加进去-->
+    <resultMap id="ArticleEditDTO" type="com.ccblog.dto.article.ArticleEditDTO" autoMapping="true">
+        <id column="articleId" property="articleId"/>
+        <result column="update_time" property="lastUpdateTime"/>
+        <result column="picture" property="cover"/>
+        <result column="source" property="sourceType"/>
+        <result column="a_id" property="articleId"/>
+        <!-- 嵌套 CategoryDTO,注意自动转换才支持驼峰转换 -->
+<!--        <association property="category" javaType="com.ccblog.dto.article.CategoryDTO">-->
+<!--            <id column="categoryId" property="categoryId"/>-->
+<!--            <result column="category_name" property="category"/>-->
+<!--            <result column="categoryStatus" property="status"/>-->
+<!--            <result column="rank" property="rank"/>-->
+<!--        </association>-->
+<!--        <collection property="tags" ofType="com.ccblog.dto.article.TagDTO">-->
+<!--            <id column="tagId" property="tagId"/>-->
+<!--            <result column="tag_name" property="tag"/>-->
+<!--            <result column="tagStatus" property="status"/>-->
+<!--            &lt;!&ndash;            <result column="selected" property="selected"/>&ndash;&gt;-->
+<!--        </collection>-->
+    </resultMap>
+
+    <sql id="ArticleDTOColumns">
+        a.article_type,a.title,a.short_title,a.summary,a.source_url,
+        a.offical_stat,a.topping_stat,a.cream_stat,a.category_id,a.`status`,a.create_time,-- 文章相关同名内容
+        a.update_time,a.picture,a.source,
+        a.id AS articleId, -- 文章相关不同名内容
+        a.user_id AS author
+<!--        ad.content                     &#45;&#45; 文章正文-->
+<!--        u.user_name AS authorName,      &#45;&#45; 作者姓名和id-->
+<!--        ui.photo    AS authorAvatar,     &#45;&#45; 作者头像-->
+<!--        c.category_name,c.`status` as categoryStatus,c.rank,-->
+<!--        c.id AS categoryId,-->
+<!--        t.tag_name,t.`status` as tagStatus,t.id AS tagId-->
+    </sql>
+
+    <!-- 公用 JOIN -->
+    <sql id="ArticleDTOTables">
+        FROM article AS a
+<!--        LEFT JOIN article_detail AS ad ON ad.article_id = a.id AND ad.version=a.version-->
+<!--        LEFT JOIN `user` AS u ON u.id = a.user_id-->
+<!--        LEFT JOIN user_info AS ui ON ui.user_id = u.id-->
+<!--        LEFT JOIN category AS c ON c.id = a.category_id-->
+<!--        LEFT JOIN article_tag AS at ON at.article_id = a.id AND `at`.version=a.version-->
+<!--        LEFT JOIN tag AS t ON t.id = at.tag_id-->
+    </sql>
+
+    <insert id="upsertArticle" useGeneratedKeys="true" keyProperty="id">
+        <!--   useGeneratedKeys="true" keyProperty="id" 表示将id赋值回去从而可以通过getId拿到     -->
+        INSERT INTO article
+        (id, user_id, article_type, title, summary, category_id,
+        source, status, create_time, update_time)
+        VALUES
+        (#{id}, #{userId}, #{articleType}, #{title},
+        #{summary}, #{categoryId},
+        #{source},#{status},
+        NOW(), NOW())
+        ON DUPLICATE KEY UPDATE
+            <if test="articleType != null">article_type = #{articleType},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="shortTitle != null">short_title = #{shortTitle},</if>
+            <if test="picture != null">picture = #{picture},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="sourceUrl != null">source_url = #{sourceUrl},</if>
+            <if test="version != null">version = #{version},</if>
+            <if test="officalStat != null">offical_stat = #{officalStat},</if>
+            <if test="creamStat != null">cream_stat = #{creamStat},</if>
+            <if test="toppingStat != null">topping_stat = #{toppingStat},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="status != null">status = #{status},</if>
+            <!-- 更新时间每次刷新 -->
+            update_time = NOW()
+    </insert>
+
+<!--    根据类别查询文章 -->
+    <select id="queryPageArticleByCategory" resultMap="ArticleDTO">
+        SELECT <include refid="ArticleDTOColumns"/>
+        <include refid="ArticleDTOTables"/>
+        <where>
+            a.deleted=0 AND a.status=1
+            <if test="categoryId!=0">and a.category_id =#{categoryId}</if>
+        </where>
+        ORDER BY a.topping_stat DESC,a.create_time DESC
+    </select>
+
+<!--    根据标签查询信息 -->
+    <select id="queryPageArticleByTagId">
+        SELECT <include refid="ArticleDTOColumns"/>
+        <include refid="ArticleDTOTables"/>
+<!--        子查询优化速度 -->
+        RIGHT JOIN
+        (
+            SELECT * FROM article_tag WHERE tag_id=#{tagId}
+        ) AS `at`
+        ON `at`.article_id=a.id AND a.version=`at`.version
+        <where>
+            a.deleted=0 AND a.status=1
+        </where>
+        ORDER BY a.topping_stat DESC,a.create_time DESC
+    </select>
+
+<!--    搜索文章 -->
+    <select id="queryPageArticleByQuery">
+        SELECT <include refid="ArticleDTOColumns"/>
+        <include refid="ArticleDTOTables"/>
+        WHERE  MATCH(summary) AGAINST(#{query} IN NATURAL LANGUAGE MODE) AND a.status=1
+        ORDER BY create_time DESC
+    </select>
+
+<!--    某用户发表文章 -->
+    <select id="queryPageArticleByUserId" resultMap="ArticleDTO">
+        SELECT <include refid="ArticleDTOColumns"/>
+        <include refid="ArticleDTOTables"/>
+        <where>
+            a.deleted=0 and a.user_id=#{userId}
+        </where>
+        order by a.create_time desc
+    </select>
+
+<!--    查询单篇文章详情 -->
+    <select id="getArticleDetailByArticleId" resultMap="ArticleDTO">
+        SELECT
+        a.article_type,a.title,a.short_title,a.summary,a.source_url,
+        a.offical_stat,a.topping_stat,a.cream_stat,a.category_id,a.`status`,a.create_time,-- 文章相关同名内容
+        a.update_time,a.picture,a.source,
+        a.id AS articleId, -- 文章相关不同名内容
+        a.user_id AS author,
+        ad.content
+<!--        用子查询优化 -->
+        FROM
+        (
+            SELECT *
+            FROM article
+            WHERE id=#{articleId}
+        ) AS a
+        LEFT JOIN article_detail AS ad ON ad.article_id=a.id AND a.version=ad.version
+    </select>
+
+    <select id="listYearArticle">
+        SELECT YEAR(create_time)  AS `year`,
+        count(id)  AS articleCount
+        FROM article
+        WHERE user_id=#{userId}
+        GROUP BY YEAR(create_time)
+        ORDER BY `year`;
+    </select>
+
+<!--    下面两个连接查询,不是常用接口无所谓(收藏和历史记录) -->
+    <select id="listReadHistoryByUserId" resultMap="ArticleDTO">
+        SELECT <include refid="ArticleDTOColumns"/>
+        <include refid="ArticleDTOTables"/>
+<!--        需要连接article_interaction -->
+        LEFT JOIN article_interaction AS ai ON ai.article_id=a.id
+        <where>
+<!--            在article_interaction里面能找到这个人的记录就说明这个人读过了-->
+            a.deleted=0 AND ai.user_id=#{userId}
+        </where>
+<!--        按照最后阅读顺序排序-->
+        ORDER BY ai.last_read_time DESC
+    </select>
+
+    <select id="listStarByUserId" resultMap="ArticleDTO" >
+        SELECT <include refid="ArticleDTOColumns"/>
+        <include refid="ArticleDTOTables"/>
+        <!--        需要连接article_interaction -->
+        LEFT JOIN article_interaction AS `ai` ON `ai`.article_id=a.id
+        <where>
+            <!--            在article_interaction里面能找到收藏过-->
+            a.deleted=0 AND `ai`.user_id=#{userId} AND `ai`.collect_stat=1
+        </where>
+        <!--        按照文章发布顺序,理论上最好是收藏时间不过似乎没记录这个字段? -->
+        ORDER BY a.create_time DESC
+    </select>
+
+<!--    文章编辑需要的信息 用子查询优化查询内容,后续把连接也去掉-->
+    <select id="getArticleEdit" resultMap="ArticleEditDTO">
+        SELECT
+        a.article_type,a.title,a.summary,a.short_title,a.source_url,a.version,
+        a.offical_stat,a.topping_stat,a.cream_stat,a.category_id,a.`status`,a.create_time,-- 文章相关同名内容
+        a.update_time,a.picture,a.source,a.category_id,
+        a.id AS articleId, -- 文章相关不同名内容
+        ad.content                     -- 文章正文
+<!--        很奇怪加了下面的就会报错???明明之前还能运行...-->
+<!--        c.category_name,c.`status` AS categoryStatus,c.rank,-->
+<!--        c.id AS categoryId,-->
+<!--        t.tag_name,t.`status` AS tagStatus,t.id AS tagId-->
+        FROM
+        (
+            SELECT *
+            FROM article
+            WHERE id=#{articleId}
+        ) AS a
+        LEFT JOIN article_detail AS ad ON ad.article_id = a.id AND ad.version=a.version
+<!--        LEFT JOIN category AS c ON c.id = a.category_id-->
+<!--        LEFT JOIN article_tag AS at ON `at`.article_id = a.id AND `at`.version=a.version-->
+<!--        LEFT JOIN tag AS t ON t.id = `at`.tag_id-->
+    </select>
+
+</mapper>

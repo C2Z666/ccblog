@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.article.ArticleTagMapper">
+<!--    本来想通过查询继续连接tag,后续改为查询concurrentHashMap得到标签信息 -->
+    <resultMap id="ArticleIdTagDTO" type="com.ccblog.dto.article.ArticleIdTagDTO" autoMapping="true">
+        <id column="articleId" property="articleId"/>
+        <collection property="tagIds" ofType="Long">
+            <id column="tagId" property="tagId"/>
+        </collection>
+    </resultMap>
+
+    <insert id="addByTagIdAndArticleId">
+        <!--   useGeneratedKeys="true" keyProperty="id" 表示将id赋值回去从而可以通过getId拿到     -->
+        insert into article_tag(article_id,tag_id,version)
+        values 
+        <foreach collection="articleTags" separator="," item="item">
+            (#{item.articleId},#{item.tagId},#{item.version})
+        </foreach>
+    </insert>
+
+    <select id="getByArticleId" resultMap="ArticleIdTagDTO">
+        SELECT a.id AS articleId,t.id AS tagId
+        FROM
+        (
+            SELECT id,version
+            FROM article
+            WHERE id = #{articleId}
+        ) AS `a`
+        LEFT JOIN article_tag AS `at` ON `at`.article_id=a.id AND a.version=`at`.version
+        LEFT JOIN tag AS t ON t.id=`at`.tag_id
+    </select>
+
+    <select id="listByArticleIds" resultMap="ArticleIdTagDTO">
+        SELECT a.id AS articleId,t.id AS tagId
+        FROM
+        (
+            SELECT id,version
+            FROM article
+            WHERE id in
+            <foreach collection="articleIds" item="articleId" close=")" open="(" separator=",">
+                #{articleId}
+            </foreach>
+        ) AS `a`
+        LEFT JOIN article_tag AS `at` ON `at`.article_id=a.id AND a.version=`at`.version
+<!--        LEFT JOIN tag AS t ON t.id=`at`.tag_id-->
+    </select>
+
+    <select id="getTagByHot">
+        SELECT tagId,tag.tag_name AS tag,tag.status,tagNum AS hotScore
+        FROM
+        (
+            SELECT tag_id AS tagId,COUNT(*) AS tagNum FROM
+            article_tag AS `at`
+            LEFT JOIN article AS a ON `at`.version=a.version AND `at`.article_id=a.id
+            GROUP BY tag_id
+            ORDER BY tagNum
+            LIMIT #{limit}
+        ) AS tmp
+        LEFT JOIN tag ON tag.id=tmp.tagId
+    </select>
+
+</mapper>
