@@ -1,0 +1,12 @@
+spring:
+  rabbitmq:
+    # 在ubuntu如果用127.0.0.1会出现连不上的情况,可能是ipv4/6的原因
+    host: localhost
+    port: 5672          # 端口
+    virtual-host:       # 必填,虚拟主机
+    username:           # 必填,用户名
+    password:           # 必填,密码
+    
+
+rabbitmq:
+  switchFlag: true

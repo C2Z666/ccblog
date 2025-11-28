@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.user.UserRelationMapper">
+
+    <select id="listFollowUser">
+<!--        这里的follow是一定一直为true的,只有获得粉丝列表这个字段才有用-->
+        SELECT ur.id relation_id, uf.user_id userId,uf.avatar,uf.userName,IF(follow_state=1,1,0) followed
+        FROM
+        (SELECT id,follow_user_id,follow_state FROM user_relation WHERE user_id=#{userId} AND follow_state=1) ur
+<!--        最后这个follow_state要是不写=1那么会返回取消关注的,但是感觉很诡异(刷新之后不关注的还显示),个人感觉followed完全是没用的返回字段-->
+        LEFT JOIN
+        (SELECT user_id,photo AS avatar,user_name AS userName FROM user_info) uf
+        on ur.follow_user_id=uf.user_id;
+    </select>
+
+    <select id="listFanUser">
+<!--        第一个join用于获得姓名照片等信息,第二个join用于获得我是否回关-->
+        SELECT ur.id relation_id, uf.user_id userId,uf.avatar,uf.userName,IF(tmp.id IS NULL,0,1) followed
+        FROM
+        (SELECT * FROM user_relation WHERE follow_user_id=#{userId} AND follow_state=1) ur
+        LEFT JOIN
+        (SELECT user_id,photo AS avatar,user_name AS userName FROM user_info)  uf
+        on ur.user_id=uf.user_id
+        LEFT JOIN
+        (SELECT * FROM user_relation WHERE user_id=#{userId} AND follow_state=1) tmp
+        on tmp.follow_user_id=uf.user_id;
+    </select>
+
+    <insert id="upsertRelationBatch">
+        INSERT INTO
+        user_relation(user_id, follow_user_id, follow_state,last_follow_time)
+        VALUES
+        <foreach collection="userRelationList" item="item" separator=",">
+            (#{item.userId},#{item.followUserId},#{item.followState},
+<!--            下面对NOW()是占位符避免报错,因为如果没有lastFollowTime是取关,那么是已经存在的记录会走更新-->
+            <if test="item.lastFollowTime!=null">#{item.lastFollowTime}</if>
+            <if test="item.lastFollowTime==null">NOW()</if>
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        follow_state   = VALUES(follow_state),
+<!--        最后关注时间为null不更新(取关)-->
+        last_follow_time   = COALESCE(VALUES(last_follow_time), last_follow_time),
+        update_time = NOW()
+    </insert>
+
+    <select id="listRecentFanIds">
+        SELECT user_id
+        FROM user_relation
+        WHERE follow_user_id = #{userId}
+        AND follow_state = 1
+        AND last_follow_time >= NOW() - INTERVAL #{days} DAY;
+    </select>
+</mapper>

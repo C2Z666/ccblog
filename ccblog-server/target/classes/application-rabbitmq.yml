@@ -1,0 +1,11 @@
+spring: # 这一部分是要配置的
+  rabbitmq:
+    host: localhost        # 你的虚拟机IP
+    port: 5672             # 端口
+    virtual-host: ccblog        # 必填,虚拟主机
+    username: czc             # 必填,用户名
+    password: 123             # 必填,密码
+    
+
+rabbitmq:
+  switchFlag: true

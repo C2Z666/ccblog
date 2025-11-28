@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ccblog.mapper.chat.ChatAiMapper">
+    <select id="listCursorChatHistory">
+        SELECT
+        seq,
+        sender,
+        content,
+        create_time
+        FROM chat_ai_history
+        <where>
+            session_id=#{sessionId} AND deleted=0
+            <![CDATA[
+            AND (create_time < #{cursor} OR (create_time = #{cursor} AND seq < #{cursorSeq}))
+            ]]>
+        </where>
+<!--        只能这样才能从上往下取limit-->
+        ORDER BY create_time DESC,seq DESC
+        LIMIT #{limit};
+    </select>
+
+    <insert id="upsertContentBatch">
+        INSERT INTO chat_ai_history
+        (session_id, seq, user_id, sender, ai_type, content, token,finish_reason,create_time,update_time)
+        VALUES
+        <foreach collection="chatAiAggDTOS" item="c" separator=",">
+            (#{c.sessionId},
+            #{c.seq},
+            #{c.userId},
+            #{c.sender},
+            <if test="c.aiType != null">#{c.aiType}</if>
+            <if test="c.aiType == null">0</if>,
+            #{c.content},
+            <if test="c.token != null">#{c.token}</if>
+            <if test="c.token == null">0</if>,
+            <if test="c.finishReason != null">#{c.finishReason}</if>
+            <if test="c.finishReason == null">0</if>,
+            <if test="c.createTime != null">#{c.createTime}</if>
+            <if test="c.createTime == null">NOW()</if>,
+            NOW())
+        </foreach>
+<!--       聊天记录一般更新不从这里走 -->
+        ON DUPLICATE KEY UPDATE
+        content  = VALUES(content),
+        token  = VALUES(token),
+        create_time = VALUES(create_time),
+        update_time=NOW()
+    </insert>
+</mapper>
