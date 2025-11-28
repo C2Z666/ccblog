@@ -134,6 +134,7 @@ repo/
 **实时聊天实时预览渲染，支持删除撤回**（使用两个浏览器同时发送得到）
 
 <img src="./doc/imgs/发送消息.gif" style="zoom: 67%;"  >
+
 **大模型对话**，后续会更新加入更多模型。
 
 <img src="./doc/imgs/大模型对话.gif" style="zoom: 67%;"  >
