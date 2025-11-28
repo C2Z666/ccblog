@@ -82,7 +82,7 @@ repo/
       |-- exception         异常
       |-- template          抽象类/接口模板
       |-- utils             工具类    
-  |-- ccblog-pojo	          数据层
+  |-- ccblog-pojo	        数据层
     ..
     |-- com.ccblog
       |-- cfg               配置数据类
