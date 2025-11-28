@@ -64,7 +64,7 @@
 
 ```
 repo/
-|-- ccblog-web              前端服务，Vue3
+|-- ccblog-front            前端服务，Vue3
 |-- doc                     项目文档
 |-- ccblog-docker           项目docker运行文件
   |-- dist                  
@@ -82,7 +82,7 @@ repo/
       |-- exception         异常
       |-- template          抽象类/接口模板
       |-- utils             工具类    
-  |-- ccblog-pojo	        数据层
+  |-- ccblog-pojo	          数据层
     ..
     |-- com.ccblog
       |-- cfg               配置数据类
@@ -104,7 +104,7 @@ repo/
       |-- mq                消息队列服务(主要为RabbitMQ)
       |-- redis             redis缓存服务
       |-- service           实现类
-      |-- QuickStart     ← 服务器入口
+      |-- QuickStart      ← 服务器入口
 ```
 
 
@@ -151,7 +151,7 @@ repo/
 docker compose up
 ```
 
-初次需要下载镜像，共五个镜像，大约1G，下载完成会自动启动服务器，包括前端和后端和中间件，服务器启动成功应可看到如下内容（初次会初始化数据库，这会消耗一段时间）：
+初次需要下载镜像，共五个镜像，大约1G，下载完成会自动启动服务器，包括前端和后端和中间件，服务器启动成功应该可以看到如下内容（初次会初始化数据库，这会消耗一段时间）：
 
 <img src="./doc/imgs/配置8.png" style="zoom: 67%;"  >
 
@@ -163,7 +163,7 @@ docker compose up
 >
 > 2.如果在启动过程中卡在rabbitmq或者其他某个进程不动，可能是遇到端口占用问题，请手动解决。若在两   个平台同时运行，请注意同一台主机会共享同样的端口。
 >
-> 3.MAC没有测试过，不知道实际情况。
+> 3.mac系统没有测试过，不知道实际情况。
 
 输入下面指令关闭：
 
