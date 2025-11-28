@@ -151,6 +151,8 @@ repo/
 进入项目目录下的`ccblog-docker`，打开cmd，在该目录下运行
 
 ```
+git clone https://github.com/C2Z666/ccblog.git
+cd ccblog/ccblog-docker
 docker compose up
 ```
 
