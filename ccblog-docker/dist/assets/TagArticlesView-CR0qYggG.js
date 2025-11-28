@@ -1,0 +1,1 @@
+import{d as l,r as c,c as o,b as a,a6 as s,F as n,a as i,a0 as t,o as r,a7 as d}from"./index-AE1sWZDZ.js";const g=i("div",{class:"home mt-2"},null,-1),f=l({__name:"TagArticlesView",setup(u){t("loginDialogClicked",()=>{e.value=!e.value});const e=c(!1);return(m,k)=>(r(),o(n,null,[a(d),g,a(s,{clicked:e.value},null,8,["clicked"])],64))}});export{f as default};

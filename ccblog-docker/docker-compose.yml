@@ -1,0 +1,113 @@
+version: "3.9"
+services:
+  mysql:
+    image: crpi-nm1tzl9v5ca968hx.cn-hangzhou.personal.cr.aliyuncs.com/czc-ccblog/mysql:8.0
+    container_name: ccblog-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: ccblog
+      MYSQL_USER: ccblog
+      MYSQL_PASSWORD: 123
+    command: >
+      mysqld
+      --default-time-zone=+8:00
+      --ngram-token-size=1
+      --default-authentication-plugin=mysql_native_password
+    healthcheck: # 测试可以ping通启动app
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d   # 初始化,:是分隔符
+    networks:
+      - ccblog-net
+
+  redis:
+    image: crpi-nm1tzl9v5ca968hx.cn-hangzhou.personal.cr.aliyuncs.com/czc-ccblog/redis:7-alpine
+    container_name: ccblog-redis
+    command: redis-server --requirepass 123   # 密码123
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - ccblog-net
+
+  rabbitmq:
+    image: crpi-nm1tzl9v5ca968hx.cn-hangzhou.personal.cr.aliyuncs.com/czc-ccblog/rabbitmq:3.12-management-alpine
+    container_name: ccblog-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ccblog
+      RABBITMQ_DEFAULT_PASS: 123
+      # 在启动时加载 definitions.json
+      # 不要在下面这个变量后面加注释
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: >
+        -rabbitmq_management load_definitions "/etc/rabbitmq/definitions.json"
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # 管理控制台
+    healthcheck: # 测试可以ping通启动app
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    volumes:
+      # 把文件挂进去
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    networks:
+      - ccblog-net
+
+  app:
+    image: crpi-nm1tzl9v5ca968hx.cn-hangzhou.personal.cr.aliyuncs.com/czc-ccblog/openjdk:17-jdk-slim
+    container_name: ccblog-app
+    restart: unless-stopped
+    working_dir: /app
+    command:
+      - java
+      - -Xms256m
+      - -Xmx512m
+      - -Dspring.datasource.url=jdbc:mysql://mysql:3306/ccblog?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - -Dspring.redis.host=redis
+      - -Dspring.rabbitmq.host=rabbitmq
+      - -Dspring.rabbitmq.username=ccblog
+      - -Dspring.rabbitmq.password=123
+      - -jar
+      - ccblog-server-1.0-SNAPSHOT.jar
+    volumes:
+      - ./service/ccblog-server-1.0-SNAPSHOT.jar:/app/ccblog-server-1.0-SNAPSHOT.jar:ro
+    ports:
+      - "8005:8005"
+    depends_on:
+      mysql:
+        condition: service_healthy # 等待mysql可ping通
+      redis:
+        condition: service_started # 运行起来就可以
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ccblog-net
+
+  nginx:
+    image: crpi-nm1tzl9v5ca968hx.cn-hangzhou.personal.cr.aliyuncs.com/czc-ccblog/nginx:alpine
+    container_name: ccblog-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./dist:/usr/share/nginx/html:ro
+    depends_on:
+      - app
+    networks:
+      - ccblog-net
+
+volumes:
+  mysql_data:
+
+networks:
+  ccblog-net:
