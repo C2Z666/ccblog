@@ -148,7 +148,7 @@ repo/
 
 如果为win系统，先下载 [Docker Desktop](https://www.docker.com/) 并打开，如果是linux，那么先下载并配置好docker环境。
 
-进入项目目录下的`ccblog-docker`，打开cmd，在该目录下运行
+然后下载项目并启动服务器
 
 ```
 git clone https://github.com/C2Z666/ccblog.git
