@@ -6,7 +6,7 @@ package com.ccblog.constant;
  * @date 2025/10/21
  */
 public class NoticeMsgConstant {
-    public static final Long ADMIN_USER_ID = 9L; // 管理员id
+    public static final Long ADMIN_USER_ID = 2L; // 管理员id
 
     /** 评论相关 */
     public static final String COMMENT_DELETED_BY_USER = "用户已删除该评论";
