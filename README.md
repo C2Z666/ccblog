@@ -146,7 +146,9 @@ repo/
 
 **docker镜像已在Win / Ubuntu22.04 / Ubuntu20.04测试通过。**
 
-如果为win系统，先下载 [Docker Desktop](https://www.docker.com/) 并打开，如果是linux，那么先下载并配置好docker环境。
+如果为win系统，先下载 [Docker Desktop](https://www.docker.com/) 并打开，一定要确认启动，在命令行输入`docker version`可以看到版本信息就可以，或者右键软件角标看到绿色`Docker Desktop is running`。
+
+如果是linux，那么先下载并配置好docker环境。
 
 然后下载项目并启动服务器
 
@@ -156,7 +158,7 @@ cd ccblog/ccblog-docker
 docker compose up
 ```
 
-初次需要下载镜像，共五个镜像，大约1G，下载完成会自动启动服务器，包括前端和后端和中间件，服务器启动成功应该可以看到如下内容（初次会初始化数据库，这会消耗一段时间）：
+初次需要下载镜像，共五个镜像，大约1G，下载完成会自动启动服务器，包括前端、后端和中间件，服务器启动成功应该可以看到如下内容（初次会初始化数据库，这会消耗一段时间）：
 
 <img src="./doc/imgs/配置8.png" style="zoom: 67%;"  >
 
