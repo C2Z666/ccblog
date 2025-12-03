@@ -9,6 +9,7 @@ services:
       MYSQL_DATABASE: ccblog
       MYSQL_USER: ccblog
       MYSQL_PASSWORD: 123
+      TZ: Asia/Shanghai
     command: >
       mysqld
       --default-time-zone=+8:00
@@ -67,11 +68,13 @@ services:
     container_name: ccblog-app
     restart: unless-stopped
     working_dir: /app
+    environment:
+      TZ: Asia/Shanghai
     command:
       - java
       - -Xms256m
       - -Xmx512m
-      - -Dspring.datasource.url=jdbc:mysql://mysql:3306/ccblog?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - -Dspring.datasource.url=jdbc:mysql://mysql:3306/ccblog?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
       - -Dspring.redis.host=redis
       - -Dspring.rabbitmq.host=rabbitmq
       - -Dspring.rabbitmq.username=ccblog

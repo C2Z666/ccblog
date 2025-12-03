@@ -176,8 +176,8 @@ const chatMessagesRef = ref<HTMLElement>();
 const chatInputDisabled = ref(true);
 const chatBtnText = ref('等待连接');
 const hasMore = ref(false); // 是否还有更多历史记录
-const cursor = ref(undefined); // 分页游标，初始值设为极大值
-const cursorSeq = ref(undefined); // 第一条消息的seq，初始化使用极大值
+const cursor = ref(undefined); // 分页游标，初始值设为空
+const cursorSeq = ref(undefined); // 第一条消息的seq，初始化为空
 const loadingMore = ref(false); // 是否正在加载更多
 const limit = 5; // 每次加载的消息数量
 
@@ -393,6 +393,8 @@ watch(effectivePeerId, async (newPeerId, oldPeerId) => {
   if (newPeerId !== oldPeerId) {
     // 重置cursor相关状态
     hasMore.value = false;
+    cursor.value = undefined;
+    cursorSeq.value = undefined;
   }
   
   if (newPeerId && newPeerId !== 0) {
