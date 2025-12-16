@@ -409,6 +409,17 @@ const postArticle = (actionType: 'SAVE' | 'POST') => {
   saveBtnLoading.value = true
   if(text.value.length < 50){
     messageTip('正文内容不得少于50字', 'warning')
+    saveBtnLoading.value = false
+    return
+  }
+  if(!articleInfoForm.category){
+    messageTip('请选择文章分类', 'warning')
+    saveBtnLoading.value = false
+    return
+  }
+  if(!articleInfoForm.tags || articleInfoForm.tags.length === 0){
+    messageTip('请选择文章标签', 'warning')
+    saveBtnLoading.value = false
     return
   }
   // console.log(
@@ -442,7 +453,7 @@ const postArticle = (actionType: 'SAVE' | 'POST') => {
   })
     .then((response) => {
       // console.log(response)
-      // messageTip('发布成功', 'success')
+      messageTip('发布成功', 'success')
       setTimeout(() => {
         router.push(`/`)
       }, 1000)
