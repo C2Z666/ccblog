@@ -43,13 +43,12 @@
 | 高性能队列 | Disruptor          | 聚合落库                |
 | 读写增强 | Lua | 批量Redis读写 |
 | 数据库     | MySQL 8.0          | utf8mb4 + ngram 全文索引    |
-| 通信       | WebSocket          | 双人实时聊天 + SSE 流式渲染 |
+| 通信       | WebSocket          | 双人实时聊天 |
 | AI 接口    | 大模型&HTTP-SSE | SSE流式返回              |
 | 前端主体 | Vue 3 + Vite      | 组合式 API + TypeScript |
 | UI 框架  | Element Plus      | 组件库                  |
 | 状态管理 | Pinia             | 类型安全                |
 | 网络请求 | Axios             | 拦截器统一处理          |
-| 实时通信 | SockJS + Stomp.js | WebSocket 封装          |
 | 容器化      | Docker + Docker Compose | 一键本地/服务器部署    |
 | 反向代理    | Nginx Alpine            | 静态资源 + API 转发    |
 | 性能压测    | JMeter                  | 实测 500 并发 4000 QPS |
