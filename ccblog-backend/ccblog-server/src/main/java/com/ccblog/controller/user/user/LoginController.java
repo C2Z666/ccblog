@@ -4,6 +4,7 @@ import com.ccblog.annotation.Permission;
 import com.ccblog.context.ReqInfoContext;
 import com.ccblog.dto.user.UserNamePasswordDTO;
 import com.ccblog.dto.user.UserRegisterDTO;
+import com.ccblog.dto.user.UserSaveInfoDTO;
 import com.ccblog.enumeration.StatusEnum;
 import com.ccblog.enumeration.user.UserRole;
 import com.ccblog.service.user.LoginService;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -81,6 +83,21 @@ public class LoginController {
         } else {
             return ResVo.fail(StatusEnum.LOGIN_FAILED_MIXED, "用户名和密码注册异常，请稍后重试");
         }
+    }
+
+    /**
+     * 发送验证码
+     * @param body 参数列表
+     * @return
+     */
+    @Operation(summary = "发送邮件验证码")
+    @PostMapping("/sendVerifyEmail")
+    public ResVo sendVerifyCode(@RequestBody Map<String,String> body){
+        String email = body.get("email");
+//        发送邮件验证码
+        // 参考 https://javaguide.cn/open-source-project/tool-library.html#pdf
+        loginService.sendVerifyCode(email);
+        return ResVo.ok(true);
     }
 
     @Permission(role = UserRole.LOGIN) // 注解方式表示当前状态

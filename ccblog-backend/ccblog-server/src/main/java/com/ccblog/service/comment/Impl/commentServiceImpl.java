@@ -30,10 +30,13 @@ import com.ccblog.redis.article.ArticleInteractionRedis;
 import com.ccblog.service.comment.helper.CommentHelper;
 import com.ccblog.utils.TruncateUtil;
 import com.ccblog.vo.comment.CommentCursorVO;
+import com.github.houbb.sensitive.word.core.SensitiveWordHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -50,6 +53,7 @@ import static com.ccblog.enumeration.comment.CommentOperateTypeEnum.LIKE;
  * @date 2025-10-03
  */
 @Service
+@Slf4j
 public class commentServiceImpl implements CommentService {
 
     @Autowired
@@ -109,10 +113,11 @@ public class commentServiceImpl implements CommentService {
         // 插入评论表格
         Long userId = ReqInfoContext.getReqInfo().getUserId();
         Long articleId = newCommentDTO.getArticleId();
+        String content  = SensitiveWordHelper.replace(newCommentDTO.getCommentContent());
         Comment comment = Comment.builder()
                 .userId(userId)
                 .articleId(articleId)
-                .content(newCommentDTO.getCommentContent())
+                .content(content)
                 .topCommentId(newCommentDTO.getTopCommentId())
                 .parentCommentId(newCommentDTO.getParentCommentId()).build();
         commentMapper.saveComment(comment);

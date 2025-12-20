@@ -46,3 +46,13 @@ ai:
       baseUrl:
       apiKey:
       secretKey:
+
+spring:
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: 1839156312@qq.com
+    password: kkrqahlohbhtbdch # 16位授权码
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true

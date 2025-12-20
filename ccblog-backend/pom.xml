@@ -58,6 +58,8 @@
         <aliJson.version>1.2.83</aliJson.version>
         <vvar.version>0.10.4</vvar.version>
         <disruptor.version>4.0.0</disruptor.version>
+        <mail.version>3.2.1</mail.version>
+        <sensitive-word.version>0.18.0</sensitive-word.version>
 
 
     </properties>
@@ -231,6 +233,18 @@
                 <groupId>com.lmax</groupId>
                 <artifactId>disruptor</artifactId>
                 <version>${disruptor.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-parent</artifactId>
+                <version>${mail.version}</version>   <!-- 或任何 3.x 版本 -->
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.houbb</groupId>
+                <artifactId>sensitive-word</artifactId>
+                <version>${sensitive-word.version}</version>
             </dependency>
 
 

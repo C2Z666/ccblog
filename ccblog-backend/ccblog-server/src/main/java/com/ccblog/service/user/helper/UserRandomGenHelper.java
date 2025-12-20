@@ -1,6 +1,7 @@
 package com.ccblog.service.user.helper;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 头像选择器
@@ -48,5 +49,20 @@ public class UserRandomGenHelper {
     public static String genAvatar() {
         int idx = RANDOM.nextInt(AVATAR_NUM);
         return String.format(AVATAR_TEMPLATE, AVATAR_ITEMS[idx]);
+    }
+
+    /**
+     * 生成len位纯数字随机验证码
+     *
+     * @param len 长度
+     * @return
+     */
+    public static String genNumericCode(int len) {
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++) {
+            sb.append(rnd.nextInt(10));   // 0-9
+        }
+        return sb.toString();
     }
 }

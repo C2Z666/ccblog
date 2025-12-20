@@ -83,6 +83,52 @@
           />
         </el-form-item>
         
+        <!-- 邮箱输入框 -->
+        <el-form-item
+          prop="email"
+          :rules="[
+            { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+            { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
+          ]"
+          class="register-form-item"
+        >
+          <el-input
+            v-model="form.email"
+            placeholder="请输入邮箱地址"
+            prefix-icon="el-icon-message"
+            clearable
+            class="register-input"
+          />
+        </el-form-item>
+        
+        <!-- 验证码输入框 -->
+        <el-form-item
+          prop="verifyCode"
+          :rules="[
+            { required: true, message: '请输入验证码', trigger: 'blur' },
+            { pattern: /^\d{6}$/, message: '验证码必须为6位数字', trigger: 'blur' }
+          ]"
+          class="register-form-item"
+        >
+          <div class="verify-code-container">
+            <el-input
+              v-model="form.verifyCode"
+              placeholder="请输入验证码"
+              prefix-icon="el-icon-lock"
+              clearable
+              class="register-input verify-code-input"
+            />
+            <el-button 
+              type="primary"
+              :disabled="countdown > 0"
+              @click="sendVerifyCode"
+              class="send-code-btn"
+            >
+              {{ countdown > 0 ? `${countdown}秒后重发` : '发送验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
+        
         <!-- 按钮组 -->
         <div class="register-btn-group">
           <el-button 
@@ -121,7 +167,7 @@ import type { FormInstance } from 'element-plus'
 import { doPost } from '@/http/BackendRequests'
 import type { CommonResponse } from '@/http/ResponseTypes/CommonResponseType'
 import { getCookie, messageTip, refreshPage, setAuthToken } from '@/util/utils'
-import { REGISTER_USER_NAME_URL } from '@/http/URL'
+import { REGISTER_USER_NAME_URL, SEND_VERIFY_EMAIL_URL } from '@/http/URL'
 import { MESSAGE_TYPE } from '@/constants/MessageTipEnumConstant'
 import { useGlobalStore } from '@/stores/global' // 全局变量需要的
 import { useFollowIdCache, startCacheRefresh } from '@/stores/useFollowIdCache'
@@ -138,6 +184,8 @@ const emit = defineEmits<{
 /* 弹窗显隐 */
 const registerModal = ref(false)
 const isLoading = ref(false)
+const sendCodeLoading = ref(false)
+const countdown = ref(0)
 let init = false
 
 watch(() => props.clicked, () => {
@@ -153,7 +201,9 @@ const formRef = ref<FormInstance>()
 const form = reactive({
   userName: '',
   password: '',
-  confirm: ''
+  confirm: '',
+  email: '',
+  verifyCode: ''
 })
 
 /* 确认密码校验 */
@@ -165,6 +215,51 @@ const validatePass = (rule: any, value: string, callback: any) => {
   }
 }
 
+/* 发送验证码 */
+const sendVerifyCode = () => {
+  if (!form.email) {
+    messageTip("请先输入邮箱地址", MESSAGE_TYPE.WARNING)
+    return
+  }
+  // 邮箱格式验证
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailPattern.test(form.email)) {
+    messageTip("请输入有效的邮箱地址", MESSAGE_TYPE.WARNING)
+    return
+  }
+  
+  sendCodeLoading.value = true
+  doPost<CommonResponse>(SEND_VERIFY_EMAIL_URL, {
+    email: form.email
+  })
+    .then((response) => {
+      sendCodeLoading.value = false
+      if(response.data.status.code === 0){
+        messageTip("验证码发送成功", MESSAGE_TYPE.SUCCESS)
+        // 开始倒计时
+        startCountdown()
+      } else {
+        messageTip(response.data.status.msg || "验证码发送失败", MESSAGE_TYPE.ERROR)
+      }
+    })
+    .catch((error) => {
+      sendCodeLoading.value = false
+      console.error(error)
+      messageTip("网络错误，请稍后重试", MESSAGE_TYPE.ERROR)
+    })
+}
+
+/* 倒计时 */
+const startCountdown = () => {
+  countdown.value = 60
+  const timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
+
 /* 提交注册 */
 const router = useRouter()
 const submitForm = (formEl: FormInstance | undefined) => {
@@ -174,7 +269,9 @@ const submitForm = (formEl: FormInstance | undefined) => {
       isLoading.value = true
       doPost<CommonResponse>(REGISTER_USER_NAME_URL, {
         userName: form.userName,
-        password: form.password
+        password: form.password,
+        email: form.email,
+        verifyCode: form.verifyCode
       })
         .then((response) => {
           isLoading.value = false
@@ -284,6 +381,39 @@ const resetForm = (formEl: FormInstance | undefined) => {
   height: 44px;
   border-radius: 8px;
   font-size: 14px;
+}
+
+/* 验证码容器 */
+.verify-code-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.verify-code-input {
+  flex: 1;
+}
+
+/* 发送验证码按钮 */
+.send-code-btn {
+  min-width: 120px;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 14px;
+  padding: 0 16px;
+  transition: all 0.3s ease;
+}
+
+.send-code-btn:disabled {
+  background-color: #c0c4cc;
+  border-color: #c0c4cc;
+  cursor: not-allowed;
+}
+
+.send-code-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
 }
 
 /* 注册按钮组 */
@@ -452,6 +582,8 @@ const resetForm = (formEl: FormInstance | undefined) => {
 .register-form-item:nth-child(1) { animation-delay: 0.1s; }
 .register-form-item:nth-child(2) { animation-delay: 0.2s; }
 .register-form-item:nth-child(3) { animation-delay: 0.3s; }
+.register-form-item:nth-child(4) { animation-delay: 0.4s; }
+.register-form-item:nth-child(5) { animation-delay: 0.5s; }
 
 @keyframes slideIn {
   from {

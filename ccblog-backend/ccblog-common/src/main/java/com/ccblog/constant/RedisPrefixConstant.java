@@ -18,6 +18,7 @@ public class RedisPrefixConstant {
     public static final String USER_FOLLOW_TIME = "user:relation:follow_time:%s"; // zset 用户关注列表,按照时间排序
     public static final String USER_FAN_TIME = "user:relation:fan_time:%s"; // zset 用户粉丝列表,按照时间排序,最大数量固定
     public static final String USER_COMMON_INFO = "user:info:%s"; // hash 用户常用信息
+    public static final String USER_VERIFY_CODE = "user:verify:%s"; // string,用户验证码 {email:code}
 
 
 

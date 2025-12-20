@@ -118,10 +118,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void saveUserInfo(UserSaveInfoDTO userSaveInfoDTO) {
         if(userSaveInfoDTO.getUserId()==null) return;
-        String userName = userMapper.getIdByUserName(userSaveInfoDTO.getUserName(),userSaveInfoDTO.getUserId());
-        if(userName!=null){
-            throw ExceptionUtil.of(StatusEnum.USER_EXISTS,userName);
-        }
         User user = new User();
         user.setId(userSaveInfoDTO.getUserId()); // 设置用户名
         BeanUtils.copyProperties(userSaveInfoDTO,user);

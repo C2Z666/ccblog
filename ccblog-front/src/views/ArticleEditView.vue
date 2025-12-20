@@ -422,18 +422,6 @@ const postArticle = (actionType: 'SAVE' | 'POST') => {
     saveBtnLoading.value = false
     return
   }
-  // console.log(
-  //   {articleId: articleId.value,
-  //   title: titleForm.title,
-  //   categoryId: articleInfoForm.category,   // 为什么这里是categoryId??
-  //   tagIds: articleInfoForm.tags,
-  //   summary: articleInfoForm.abstract,
-  //   content: text.value,
-  //   cover: cover.value? cover.value : undefined,
-  //   articleType: ArticleTypeEnum.BLOG,
-  //   source: DocumentSourceTypeEnum.ORIGINAL,
-  //   version: version.value+1,
-  //   actionType: actionType})
   doPost<CommonResponse>(ARTICLE_UPLOAD_URL,
   {
    
@@ -452,14 +440,19 @@ const postArticle = (actionType: 'SAVE' | 'POST') => {
     
   })
     .then((response) => {
-      // console.log(response)
-      messageTip('发布成功', 'success')
+      if(actionType === 'POST'){
+        messageTip('发布成功,等待审核', 'success')
+      }
+      else{
+        messageTip('成功保存草稿', 'success')
+      }
       setTimeout(() => {
         router.push(`/`)
       }, 1000)
     })
     .catch((error) => {
-      console.error(error)
+      // console.error(error)
+      messageTip('发布失败' , 'error')
     })
     .finally(() => {
       saveBtnLoading.value = true

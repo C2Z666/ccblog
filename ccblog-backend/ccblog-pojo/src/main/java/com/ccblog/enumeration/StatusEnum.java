@@ -71,17 +71,19 @@ public enum StatusEnum {
     // 用户相关异常
     LOGIN_FAILED_MIXED(400_403_001, "登录失败:%s"),
     USER_NOT_EXISTS(400_404_001, "用户不存在:%s"),
-    USER_EXISTS(400_404_002, "用户已存在:%s"),
+    USER_EMAIL_EXISTS(400_404_002, "糟糕!邮箱已被注册"),
     // 用户登录名重复
     USER_LOGIN_NAME_REPEAT(400_404_003, "用户登录名重复:%s"),
     // 待审核
     USER_NOT_AUDIT(400_500_001, "用户未审核:%s"),
-    // 星球编号不存在
-    USER_STAR_NOT_EXISTS(400_404_002, "星球编号不存在:%s"),
-    // 星球编号重复
-    USER_STAR_REPEAT(400_404_002, "星球编号重复:%s"),
+    // 注册登录
     USER_PWD_ERROR(400_500_002, "用户名or密码错误"),
     USER_NAME_PWD_BLANK(400_500_002, "用户名和密码不能为空"),
+    USER_VERIFY_BLANK(400_500_002, "用户名和密码不能为空"),
+    VERIFY_CODE_FORMAT_INVALID(400_400_001, "验证码格式错误"),
+    VERIFY_EMAIL_FORMAT_INVALID(400_400_001, "邮箱格式错误"),
+    VERIFY_CODE_MISMATCH(400_400_002, "验证码过期或错误"),
+
     // 权限不足
     NO_PERMISSION(400_403_002, "权限不足");
 

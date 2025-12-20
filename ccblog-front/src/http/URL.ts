@@ -20,6 +20,8 @@ export const LOGIN_USER_NAME_URL = `${API_PREFIX}/login/username`
 export const REGISTER_USER_NAME_URL = `${API_PREFIX}/register/username`
 // 退出登录
 export const LOGOUT_URL = `${API_PREFIX}/logout`
+// 发送验证邮件
+export const SEND_VERIFY_EMAIL_URL = `${API_PREFIX}/sendVerifyEmail`
 // 获取用户信息
 export const USER_INFO_URL = `${API_PREFIX}/user/userHome`
 // 获取热门作者
@@ -127,6 +129,10 @@ export const USER_CHAT_DELETE_URL = `${API_PREFIX}/chat/user/delete`
 // ============ 通用模块 ============
 // 上传图片
 export const FILE_UPLOAD_URL = `${API_PREFIX}/common/upload`
+// 获取举报列表
+export const REPORT_TYPE_URL = `${API_PREFIX}/common/report/list`
+// 举报
+export const REPORT_URL = `${API_PREFIX}/common/report/save`
 // 获取全局信息
 export const GLOBAL_INFO_URL = `${API_PREFIX}/global/info`
 

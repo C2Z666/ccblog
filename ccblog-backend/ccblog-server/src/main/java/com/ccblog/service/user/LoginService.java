@@ -42,4 +42,10 @@ public interface LoginService {
      * @param session
      */
     void logout(String session);
+
+    /**
+     * 发送验证码
+     * @param email
+     */
+    void sendVerifyCode(String email);
 }

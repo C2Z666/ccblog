@@ -1,19 +1,21 @@
 package com.ccblog.controller.user;
 
+import com.ccblog.dto.common.ReportDetailDTO;
 import com.ccblog.enumeration.StatusEnum;
+import com.ccblog.service.common.CommonService;
 import com.ccblog.utils.AliOssUtil;
+import com.ccblog.vo.common.ReportTypeVO;
 import com.ccblog.vo.global.ResVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 /**
  * 通用接口
@@ -25,6 +27,9 @@ import java.net.URL;
 public class CommonController {
     @Autowired
     private AliOssUtil aliOssUtil;
+
+    @Autowired
+    private CommonService commonService;
 
     /**
      * 上传图片到阿里云
@@ -46,5 +51,29 @@ public class CommonController {
             return ResVo.fail(StatusEnum.OSS_ARGUMENT_FAILED, e.getMessage());
         }
         return ResVo.fail(StatusEnum.UPLOAD_PIC_FAILED); // 失败
+    }
+
+    /**
+     * 获取举报条目
+     * @param type  类型 @ReportTargetTypeEnum
+     * @return
+     */
+    @GetMapping("/report/list")
+    @Operation(summary = "获取举报条目")
+    public ResVo<List<ReportTypeVO>> getReportType(int type){
+        List<ReportTypeVO> reportTypeVOS = commonService.getAllReportItems(type);
+        return ResVo.ok(reportTypeVOS);
+    }
+
+    /**
+     * 举报操作
+     * @param reportDetailDTO  举报信息
+     * @return
+     */
+    @PostMapping("/report/save")
+    @Operation(summary = "举报")
+    public ResVo report(@RequestBody ReportDetailDTO reportDetailDTO){
+        commonService.saveReport(reportDetailDTO);
+        return ResVo.ok(true);
     }
 }

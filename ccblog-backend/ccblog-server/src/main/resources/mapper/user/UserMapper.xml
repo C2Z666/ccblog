@@ -41,9 +41,8 @@
         <set>
             <if test="userName!=null">user_name=#{userName},</if>
             <if test="password!=null">password=#{password},</if>
-            <if test="thirdAccountId!=null">third_account_id=#{thirdAccountId},</if>
-            <if test="password!=null">password=#{password},</if>
-            <if test="updateTime!=null">update_time=#{updateTime},</if>
+            <if test="email!=null">email=#{email},</if>
+            update_time=NOW()
         </set>
         <where>
             id=#{id}

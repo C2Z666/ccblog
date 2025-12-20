@@ -14,12 +14,12 @@ import org.apache.ibatis.annotations.Select;
 public interface LoginMapper {
 
     /**
-     * 根据用户名查询用户
-     * @param username
+     * 根据用户邮箱查询用户
+     * @param email
      * @return
      */
-    @Select("select * from user where user_name=#{userName}")
-    User getUserByUserName(String userName);
+    @Select("select * from user where email=#{email}")
+    User getUserByEmail(String email);
 
     /**
      * 插入user

@@ -1,9 +1,8 @@
 package com.ccblog.service.user.Impl;
 
+import com.ccblog.cfg.MailProps;
 import com.ccblog.context.ReqInfoContext;
 import com.ccblog.dto.user.BaseUserInfoDTO;
-import com.ccblog.dto.user.CommonInfoDTO;
-import com.ccblog.dto.user.LoginSuccDTO;
 import com.ccblog.dto.user.UserRegisterDTO;
 import com.ccblog.entity.user.IpInfo;
 import com.ccblog.entity.user.User;
@@ -12,17 +11,24 @@ import com.ccblog.enumeration.user.LoginTypeEnum;
 import com.ccblog.enumeration.StatusEnum;
 import com.ccblog.mapper.user.LoginMapper;
 import com.ccblog.mapper.user.UserMapper;
+import com.ccblog.redis.user.VerifyRedis;
 import com.ccblog.service.user.LoginService;
+import com.ccblog.service.user.helper.EmailHelper;
 import com.ccblog.service.user.helper.UserPwdHelper;
 import com.ccblog.service.user.helper.UserRandomGenHelper;
 import com.ccblog.service.user.helper.UserSessionHelper;
 import com.ccblog.exception.ExceptionUtil;
 import com.ccblog.utils.ip.IpUtil;
 import com.ccblog.vo.user.LoginInfoVO;
+import jakarta.annotation.Resource;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,25 +55,29 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private EmailHelper emailHelper;
+
+    @Autowired
+    private VerifyRedis verifyRedis;
+
+
 
     /**
      * 用户密码登录
-     * @param username
+     * @param email
      * @param password
      * @return
      */
-    public LoginInfoVO loginByUserPwd(String username, String password) {
-        User user = userLoginMapper.getUserByUserName(username); // 先查询是否有用户
+    public LoginInfoVO loginByUserPwd(String email, String password) {
+        User user = userLoginMapper.getUserByEmail(email); // 先查询是否有用户
         if (user == null) {
-            throw ExceptionUtil.of(StatusEnum.USER_NOT_EXISTS, "userName=" + username);
+            throw ExceptionUtil.of(StatusEnum.USER_NOT_EXISTS, "email=" + email);
         }
         if (!userPwdHelper.match(password, user.getPassword())) {
             throw ExceptionUtil.of(StatusEnum.USER_PWD_ERROR);
         }
         Long userId = user.getId();
-        // 1. 为了兼容历史数据，对于首次登录成功的用户，初始化ai信息
-        // todo: 目前没有考虑ai,所以先注释
-//        userAiService.initOrUpdateAiInfo(new UserPwdLoginReq().setUserId(userId).setUsername(username).setPassword(password));
         // 查出用户头像和昵称信息
         LoginInfoVO loginInfoVO = userMapper.getLoginInfoByUserId(userId);
 
@@ -100,10 +110,13 @@ public class LoginServiceImpl implements LoginService {
 
         LoginInfoVO loginInfoVO = LoginInfoVO.builder()
                 .userId(userId)
+                .userName(userRegisterDTO.getUserName())
                 .photo(userInfo.getPhoto())
                 .build();
         // 注册，返回对应的session
 //        ReqInfoContext.getReqInfo().setUserId(userId);
+        // 失效验证码
+        verifyRedis.removeCode(userRegisterDTO.getEmail()); // 失效验证码
         return loginInfoVO;
     }
 
@@ -115,15 +128,41 @@ public class LoginServiceImpl implements LoginService {
         userSessionHelper.removeSession(session); // 移除session,其实就是删除缓存redis里面的
     }
 
+    /**
+     * 发送验证码
+     * @param email
+     */
+    public void sendVerifyCode(String email) {
+        emailHelper.sendVerifyCode(email);
+    }
+
     private void registerPreCheck(UserRegisterDTO userRegisterDTO){
         // 检测是否为空
         if (StringUtils.isBlank(userRegisterDTO.getUserName()) || StringUtils.isBlank(userRegisterDTO.getPassword())) {
             throw ExceptionUtil.of(StatusEnum.USER_NAME_PWD_BLANK);
         }
-        // 查询用户是否存在
-        User user = userLoginMapper.getUserByUserName(userRegisterDTO.getUserName()); // 先查询是否有用户
+        // 检查验证码格式是否正确(前端会校验,但是从健壮性考虑可以排除其他途径发送的无效请求)
+        boolean flag = true;
+        String code = userRegisterDTO.getVerifyCode();
+        if (code == null || code.length() != 6) flag=false;
+        if(flag){
+            for (int i = 0; i < 6; i++) {
+                if (code.charAt(i) < '0' || code.charAt(i) > '9')
+                    flag = false;
+            }
+        }
+        if(!flag){
+            throw ExceptionUtil.of(StatusEnum.VERIFY_CODE_FORMAT_INVALID);
+        }
+        // 查询验证码是否正确
+        if(!verifyRedis.checkIfCorrect(userRegisterDTO.getEmail(), code)){
+            throw ExceptionUtil.of(StatusEnum.VERIFY_CODE_MISMATCH);
+        }
+
+        // 查询邮箱是否已注册
+        User user = userLoginMapper.getUserByEmail(userRegisterDTO.getEmail()); // 先查询是否有用户
         if(user!=null){
-            throw ExceptionUtil.of(StatusEnum.USER_EXISTS,userRegisterDTO.getUserName());
+            throw ExceptionUtil.of(StatusEnum.USER_EMAIL_EXISTS);
         }
     }
 
@@ -153,20 +192,17 @@ public class LoginServiceImpl implements LoginService {
         if (clientIp != null && !Objects.equals(ip.getLatestIp(), clientIp)) {
             // ip不同，需要更新
             ip.setLatestIp(clientIp);
-            ip.setLatestRegion(IpUtil.getLocationByIp(clientIp).toRegionStr());
+//            ip.setLatestRegion(IpUtil.getLocationByIp(clientIp).toRegionStr());
 
             if (ip.getFirstIp() == null) {
                 ip.setFirstIp(clientIp);
-                ip.setFirstRegion(ip.getLatestRegion());
+//                ip.setFirstRegion(ip.getLatestRegion());
             }
             userMapper.updateUserInfoById(userInfo);
         }
         BaseUserInfoDTO baseUserInfoDTO = new BaseUserInfoDTO();
         BeanUtils.copyProperties(userInfo,baseUserInfoDTO);
 
-        //todo:【未完成】需要完成ai初始化
-//        UserAiDO userAiDO = userAiDao.getByUserId(userId);
-//        dto = UserConverter.toDTO(user, userAiDO);
         return baseUserInfoDTO;
     }
 }

@@ -23,6 +23,16 @@
           <el-icon color="#999"><Delete /></el-icon>
           <span class="count">删除</span>
         </el-button>
+        <!-- 举报 -->
+        <el-button
+          text
+          size="small"
+          @click="reportDialog = true"
+          v-if="global.isLogin && global.user.userId !== item.userId"
+        >
+          <el-icon color="#999"><WarningFilled /></el-icon>
+          <span class="count">举报</span>
+        </el-button>
       
       <div class="action-bar">
         <!-- 点赞 -->
@@ -89,10 +99,17 @@
       <slot v-if="!item.dislike" name="children" />
     </div>
   </div>
+  <!-- 举报对话框 -->
+  <ReportDialog
+    v-model="reportDialog"
+    :target-id="Number(item.commentId)"
+    :target-type="Number(ReportTypeConstants.COMMENT)"
+    :target-type-name="'评论'"
+  />
 </template>
 
 <script setup lang="ts">
-import { ChatDotRound, ChatSquare, Delete} from '@element-plus/icons-vue'  // ① 局部彩色图标
+import { ChatDotRound, ChatSquare, Delete, WarningFilled} from '@element-plus/icons-vue'  // ① 局部彩色图标
 
 import type { CommentItemDTO } from '@/http/ResponseTypes/CommentType/CursorCommentType';
 
@@ -112,6 +129,8 @@ import { useRoute } from 'vue-router'
 dayjs.extend(relativeTime)
 import { Remove } from '@element-plus/icons-vue' // 折叠要用
 import { CommentOperationType } from '@/constants/CommentOperationType';
+import { CommentOperationType as ReportTypeConstants } from '@/constants/ReportTypeConstants';
+import ReportDialog from '@/components/dialog/ReportDialog.vue'
 import { ElMessageBox } from 'element-plus';
 
 // 拿到上层传下来的参数
@@ -126,6 +145,9 @@ const articleId     = inject<number>('articleId')!
 
 // 下面定义点击事件
 const friendlyTime = (iso: string) => dayjs(iso).fromNow()
+
+// 举报对话框
+const reportDialog = ref(false);
 
 /* ===== 点赞 ===== */
 /* ===== 删除 ===== */

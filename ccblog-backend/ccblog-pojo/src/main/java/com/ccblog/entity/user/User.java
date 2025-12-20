@@ -23,9 +23,9 @@ public class User extends BaseInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 第三方用户ID
+     * 邮箱
      */
-    private String thirdAccountId;
+    private String email;
 
     /**
      * 登录方式: 0-微信登录，1-账号密码登录

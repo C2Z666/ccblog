@@ -37,6 +37,7 @@ import com.ccblog.utils.PageUtil;
 import com.ccblog.vo.article.ArticleDetailVO;
 import com.ccblog.vo.user.UserBaseInfoVo;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.houbb.sensitive.word.core.SensitiveWordHelper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -153,10 +154,9 @@ public class ArticleServiceImpl implements ArticleService {
         } else {
             switch (newArticleDTO.getActionType()) {
                 case "POST": // 发布
-                    article.setStatus(PushStatusEnum.ONLINE.getCode()); // 本来是需要转审核,但是没有写管理系统所以跳过
+                    article.setStatus(PushStatusEnum.REVIEW.getCode()); // 需要审核
                     break;
                 case "SAVE": // 草稿
-                    // fixme:草稿是已发布还是未发布? 列为未发布
                     article.setStatus(PushStatusEnum.OFFLINE.getCode());
                     break;
                 case "DELETE": // 删除

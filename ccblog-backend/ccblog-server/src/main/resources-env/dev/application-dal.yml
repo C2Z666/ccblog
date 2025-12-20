@@ -3,12 +3,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/${database.name}?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
     username: root    # 用户名,必填
-    password:         # 密码,必填
+    password: czc666        # 密码,必填
 
   redis:
     host: localhost
     port: 6379
-    password:       # 密码,必填
+    password: 123      # 密码,必填
     database: 8
     timeout: 3000 # 连接超时时间（毫秒）
     lettuce.pool:

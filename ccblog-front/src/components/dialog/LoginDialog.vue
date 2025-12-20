@@ -21,13 +21,13 @@
         label-width="0"
         class="login-form"
       >
-        <!-- 用户名输入框 -->
+        <!-- 邮箱输入框 -->
         <el-form-item
           prop="username"
           :rules="[
             {
               required: true,
-              message: '用户名不能为空',
+              message: '邮箱不能为空',
               trigger: ['blur', 'change']
             }
           ]"
@@ -35,7 +35,7 @@
         >
           <el-input 
             v-model="dynamicValidateForm.username" 
-            placeholder="请输入用户名"
+            placeholder="请输入邮箱"
             prefix-icon="el-icon-user"
             clearable
             class="login-input"
@@ -149,7 +149,7 @@ watch(loginModal, (newVal) => {
   emit('update:clicked', newVal)
 })
 
-// 组件挂载时检查是否有记住的用户名
+// 组件挂载时检查是否有记住的邮箱
 onMounted(() => {
   const rememberedUsername = localStorage.getItem('rememberedUsername')
   if (rememberedUsername) {
@@ -165,8 +165,8 @@ const dynamicValidateForm = reactive<{
   password: string,
   rememberMe: boolean
 }>({
-  username: '',
-  password: '',
+  username: 'czc@test.com',
+  password: '123',
   rememberMe: false
 })
 
@@ -187,7 +187,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
           isLoading.value = false
           if(response.data.status.code === 0){
             messageTip("登录成功", MESSAGE_TYPE.SUCCESS)
-            // 记住用户名密码
+            // 记住邮箱密码
             if (dynamicValidateForm.rememberMe) {
               localStorage.setItem('rememberedUsername', dynamicValidateForm.username)
             } else {
@@ -220,7 +220,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
           messageTip("网络错误，请稍后重试", MESSAGE_TYPE.ERROR)
         })
       } else {
-        messageTip("请按要求填写用户名密码", MESSAGE_TYPE.ERROR)
+        messageTip("请按要求填写邮箱和密码", MESSAGE_TYPE.ERROR)
       }
   })
 }

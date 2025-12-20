@@ -100,6 +100,10 @@ public class GlobalInitService {
     public void initLoginUser(ReqInfoContext.ReqInfo reqInfo) {
         HttpServletRequest request =
                 ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        // 优先查看session-key
+        Optional.ofNullable(SessionUtil.findCookieByName(request, LoginService.SESSION_KEY))
+                .ifPresent(cookie -> initLoginUser(cookie.getValue(), reqInfo));
+        if(reqInfo.getUser()!=null)return;
         if (request.getCookies() == null) {
             Optional.ofNullable(request.getHeader("Authorization"))
                     .ifPresent(cookie -> initLoginUser(request.getHeader("Authorization"), reqInfo));
@@ -107,12 +111,11 @@ public class GlobalInitService {
         }
         Optional.ofNullable(request.getHeader("Authorization"))
                 .ifPresent(token -> initLoginUser(token, reqInfo));
+        if(reqInfo.getUser()!=null)return;
         if(request.getHeader("Authorization") != null){
             String token = request.getHeader("Authorization");
             initLoginUser(token, reqInfo);
         }
-        Optional.ofNullable(SessionUtil.findCookieByName(request, LoginService.SESSION_KEY))
-                .ifPresent(cookie -> initLoginUser(cookie.getValue(), reqInfo));
     }
 
     /**
@@ -121,9 +124,8 @@ public class GlobalInitService {
      * @param reqInfo
      */
     public void initLoginUser(String session, ReqInfoContext.ReqInfo reqInfo) {
-        BaseUserInfoDTO user = loginService.getAndUpdateUserIpInfoBySessionId(session, null);
+        BaseUserInfoDTO user = loginService.getAndUpdateUserIpInfoBySessionId(session, reqInfo.getClientIp());
         reqInfo.setSession(session);
-//        log.info("token:{}",session);
         if (user != null) {
             reqInfo.setUserId(user.getUserId());
             reqInfo.setUser(user); // 设置用户信息

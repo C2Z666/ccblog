@@ -81,6 +81,16 @@
               <span>删除</span>
             </p>
           </div>
+          <div class="flex" v-else-if="global.isLogin">
+            <p @click="reportDialog=true" class="p-1 edit-delete-btn flex">
+              <span class="center-content">
+                <el-icon :size="20">
+                  <WarningFilled />
+                </el-icon>
+              </span>
+              <span>举报</span>
+            </p>
+          </div>
         </div>
         <!--    文章的tag    -->
         <div>
@@ -230,6 +240,15 @@
       </div>
     </template>
   </el-dialog>
+
+  <!-- 举报对话框 -->
+  <ReportDialog
+    v-model="reportDialog"
+    :target-id="Number(props.articleVo.article.articleId)"
+    :target-type="Number(CommentOperationType.ARTICLE)"
+    :target-type-name="'文章'"
+  />
+
 </template>
 
 <script setup lang="ts">
@@ -237,7 +256,8 @@
 import { format } from 'date-fns'
 import '@/assets/md-preview.css'
 import { inject, ref, watch } from 'vue'
-import { Comment, Delete, Edit, Loading, StarFilled } from '@element-plus/icons-vue'
+import { Comment, Delete, Edit, Loading, StarFilled, WarningFilled } from '@element-plus/icons-vue'
+import ReportDialog from '../dialog/ReportDialog.vue'
 import type { ArticleDetailResponse } from '@/http/ResponseTypes/ArticleDetailResponseType'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
@@ -249,6 +269,7 @@ import { OperateTypeEnum } from '@/constants/OperateTypeConstants'
 import type { SimpleUserInfo } from '@/http/ResponseTypes/UserInfoType/SimpleUserInfoType'
 import { useRouter } from 'vue-router'
 import { getRandomElTagType } from '@/constants/element-plus-constants/ELTagEnumConstants'
+import { CommentOperationType } from '@/constants/ReportTypeConstants'
 
 const globalStore = useGlobalStore()
 const global = globalStore.global
@@ -271,6 +292,9 @@ const emit = defineEmits<{
 
 // ========= 删除文章 ========
 const deleteDialog = ref(false)
+
+// ========= 举报文章 ========
+const reportDialog = ref(false)
 
 const deleteArticle = () => {
   doGet<CommonResponse>(ARTICLE_DELETE_URL, {
